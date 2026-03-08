@@ -47,9 +47,9 @@ public class MuseDashSongInfoJSON
 }
 public class MuseDashSong : ChartSong
 {
-	private MuseDashSongInfoJSON __jsonInfo;
+	public readonly MuseDashSongInfoJSON JsonInfo;
 	public MuseDashSong(MuseDashSongInfoJSON info) {
-		__jsonInfo = info;
+		JsonInfo = info;
 		// Debug.Assert(info.Difficulty5 == "");
 	}
 	public static string? GetFixedFilename(string givenBase, string fileName, [NotNullWhen(true)] bool throwExp = true) {
@@ -98,7 +98,7 @@ public class MuseDashSong : ChartSong
 		if (IValidatable.IsValid(AudioTrack))
 			return AudioTrack;
 
-		AudioClip audioclip = MuseDashCompatibility.StreamingAssets.FindAssetByName<AudioClip>(__jsonInfo.Music)!;
+		AudioClip audioclip = MuseDashCompatibility.StreamingAssets.FindAssetByName<AudioClip>(JsonInfo.Music)!;
 		return MuseDashCompatibility.GetMusic(EngineCore.Level, audioclip);
 	}
 
@@ -106,7 +106,7 @@ public class MuseDashSong : ChartSong
 		if (IValidatable.IsValid(DemoTrack))
 			return DemoTrack;
 
-		AudioClip? audioclip = MuseDashCompatibility.StreamingAssets.FindAssetByName<AudioClip>(__jsonInfo.Demo);
+		AudioClip? audioclip = MuseDashCompatibility.StreamingAssets.FindAssetByName<AudioClip>(JsonInfo.Demo);
 		if (audioclip == null) return null;
 		return MuseDashCompatibility.GetMusic(EngineCore.Level, audioclip);
 	}
@@ -119,7 +119,7 @@ public class MuseDashSong : ChartSong
 
 		// var start = new Stopwatch();
 		// start.Start();
-		Texture2D? tex2D = MuseDashCompatibility.StreamingAssets.FindAssetByName<Texture2D>(__jsonInfo.Cover);
+		Texture2D? tex2D = MuseDashCompatibility.StreamingAssets.FindAssetByName<Texture2D>(JsonInfo.Cover);
 		if (tex2D == null) {
 			callback(null);
 			return;
@@ -155,7 +155,7 @@ public class MuseDashSong : ChartSong
 		LoadAssetFile(); Interlude.Spin();
 
 		//MonoBehaviour map = (MonoBehaviour)AssetsFile.assetsFileList[0].Objects.First(x => x is MonoBehaviour mB && mB.m_Name.EndsWith($"_map{mapID}"));
-		MonoBehaviour map = MuseDashCompatibility.StreamingAssets.LoadAsset<MonoBehaviour>($"Assets/Static Resources/Data/Configs/StageInfos/{__jsonInfo.NoteJSON}{mapID}.asset").GetRequiredResult();
+		MonoBehaviour map = MuseDashCompatibility.StreamingAssets.LoadAsset<MonoBehaviour>($"Assets/Static Resources/Data/Configs/StageInfos/{JsonInfo.NoteJSON}{mapID}.asset").GetRequiredResult();
 		var obj = map.ToType();
 		var rawData = JsonConvert.SerializeObject(obj, Formatting.Indented); Interlude.Spin(submessage: "Reading Muse Dash chart...");
 
@@ -175,17 +175,17 @@ public class MuseDashSong : ChartSong
 
 	protected override ChartInfo? ProduceInfo() {
 		List<string> SearchTags = [];
-		SearchTags.AddRange(__jsonInfo.Name.Split(' '));
+		SearchTags.AddRange(JsonInfo.Name.Split(' '));
 		ChartInfo info = new ChartInfo() {
-			BPM = __jsonInfo.BPM,
-			Music = __jsonInfo.Music,
-			LevelDesigners = [__jsonInfo.LevelDesigner, __jsonInfo.LevelDesigner, __jsonInfo.LevelDesigner, __jsonInfo.LevelDesigner],
-			Difficulty1 = __jsonInfo.Difficulty1,
-			Difficulty2 = __jsonInfo.Difficulty2,
-			Difficulty3 = __jsonInfo.Difficulty3,
-			Difficulty4 = __jsonInfo.Difficulty4,
-			Difficulty5 = __jsonInfo.Difficulty5,
-			Scene = __jsonInfo.Scene,
+			BPM = JsonInfo.BPM,
+			Music = JsonInfo.Music,
+			LevelDesigners = [JsonInfo.LevelDesigner, JsonInfo.LevelDesigner, JsonInfo.LevelDesigner, JsonInfo.LevelDesigner],
+			Difficulty1 = JsonInfo.Difficulty1,
+			Difficulty2 = JsonInfo.Difficulty2,
+			Difficulty3 = JsonInfo.Difficulty3,
+			Difficulty4 = JsonInfo.Difficulty4,
+			Difficulty5 = JsonInfo.Difficulty5,
+			Scene = JsonInfo.Scene,
 			SearchTags = SearchTags.ToArray()
 		};
 

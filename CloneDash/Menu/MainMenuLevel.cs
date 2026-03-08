@@ -4,7 +4,7 @@ using CloneDash.Compatibility.MuseDash;
 using CloneDash.Data;
 using CloneDash.Menu;
 using CloneDash.Menu.Searching;
-
+using CloneDash.Multiplayer;
 using Nucleus;
 using Nucleus.Audio;
 using Nucleus.Commands;
@@ -113,6 +113,7 @@ public class MainMenuLevel : Level
 	private Button backButton;
 	public override void OnUnload() {
 		base.OnUnload();
+		ActiveElements.FirstOrDefault()?.OnRemoval();
 		MDMCWebAPI.CancelPendingRequests();
 	}
 	public void PopActiveElement() {
@@ -429,6 +430,25 @@ public class MainMenuLevel : Level
 
 	public void LoadChartSheetLevel(ChartSong song, int mapID, bool autoplay) {
 		if (workingLevel != null) return;
+
+		if (MultiplayerManager.Client != null)
+		{
+			if (MultiplayerManager.Client.IsHost)
+			{
+				var md = song as MuseDashSong;
+				if (md is null)
+				{
+					Logs.Warn("Only Muse Dash songs are supported right now.");
+					return;
+				}
+
+				MultiplayerManager.Client.StartMap(md.JsonInfo.UID, mapID);
+			} 
+			else
+				Logs.Warn("Only the lobby host can start maps.");
+			
+			return;
+		}
 
 		workingLevel = DashGameLevel.LoadLevel(song, mapID, autoplay);
 	}

@@ -23,7 +23,7 @@ namespace CloneDash.Menu;
 /// </summary>
 public class CharacterPanel : Panel
 {
-	private ICharacterDescriptor? Character;
+	public ICharacterDescriptor? Character { get; private set; }
 	private ModelInstance? Model;
 	private readonly AnimationHandler Anims = new();
 	private AudioPlaybackHandle Music;
@@ -116,6 +116,7 @@ public class CharacterPanel : Panel
 	}
 
 	public override void MouseClick(FrameState state, ButtonCode button) {
+		if (!ExpressiveOnClicks) return;
 		PlayRandomExpression();
 	}
 	public void PlayApplyExpression() {
@@ -265,16 +266,19 @@ public class CharacterPanel : Panel
 		
 		ResetExpression();
 
-		var clip = charDescriptor.GetMainShowMusic(Level);
-		if (IValidatable.IsValid(clip)) {
-			clip.BindVolumeToConVar(AudioSettings.snd_musicvolume);
-			Music = audiosystem.CreatePlayback(clip, AudioPlaybackSettings.Unaltered with {
-				Looping = true,
-				ManuallyUpdate = true,
-				Stream = true,
-				DoNotAutoDestroy = true
-			});
-			audiosystem.PlaySound(Music);
+		if (PlaysMusic)
+		{
+			var clip = charDescriptor.GetMainShowMusic(Level);
+			if (IValidatable.IsValid(clip)) {
+				clip.BindVolumeToConVar(AudioSettings.snd_musicvolume);
+				Music = audiosystem.CreatePlayback(clip, AudioPlaybackSettings.Unaltered with {
+					Looping = true,
+					ManuallyUpdate = true,
+					Stream = true,
+					DoNotAutoDestroy = true
+				});
+				audiosystem.PlaySound(Music);
+			}
 		}
 
 		if (extendedModels)

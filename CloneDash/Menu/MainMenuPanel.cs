@@ -4,8 +4,10 @@ using CloneDash.Data;
 using CloneDash.Game;
 using CloneDash.Levels;
 using CloneDash.Menu.Searching;
+using CloneDash.Multiplayer;
 using CloneDash.Settings;
 using CloneDash.Systems;
+using FMOD;
 using Nucleus;
 using Nucleus.Audio;
 using Nucleus.Commands;
@@ -20,7 +22,7 @@ using Nucleus.Types;
 using Nucleus.UI;
 
 using static CloneDash.Compatibility.CustomAlbums.CustomAlbumsCompatibility;
-
+using Debug = System.Diagnostics.Debug;
 
 
 namespace CloneDash.Menu;
@@ -108,6 +110,8 @@ public class MainMenuPanel : Panel, IMainMenuPanel
 	}
 	public override void OnRemoval() {
 		base.OnRemoval();
+		MultiplayerManager.OnConnect -= OnConnect;
+		MultiplayerManager.OnDisconnect -= OnDisconnect;
 	}
 	protected override void Initialize() {
 		base.Initialize();
@@ -155,12 +159,24 @@ public class MainMenuPanel : Panel, IMainMenuPanel
 			settings.DrawPanelBackground = false;
 		});
 		MakeNavigationButton("Exit to Desktop", "ui/pause_exit.png", $"Close the application.", 350, (menu) => EngineCore.Close());
+
+		MultiplayerManager.OnConnect += OnConnect;
+		MultiplayerManager.OnDisconnect += OnDisconnect;
+		if (MultiplayerManager.Connected) OnConnect();
 	}
 
-
-	protected override void OnThink(FrameState frameState) {
+	protected override void OnThink(FrameState frameState)
+	{
 		base.OnThink(frameState);
 		// Char.CharacterOffset = new((1 - (float)NMath.Ease.OutCirc(Math.Clamp(Level.Curtime * 1.5, 0, 1))) * -(Level.FrameState.WindowWidth / 2), 0);
+
+		var i = 0;
+		
+		foreach (var (_, ch) in _playerCharacters)
+		{
+			ch.Position = new Vector2F(Level.FrameState.WindowWidth * 0.2f * i, 0);
+			i++;
+		}
 	}
 	private void Back_MouseReleaseEvent(Element self, FrameState state, ButtonCode button) {
 		DestroyNavigationMenu();
@@ -198,4 +214,60 @@ public class MainMenuPanel : Panel, IMainMenuPanel
 			}
 		}
 	}
+
+	#region Multiplayer
+
+	private void OnConnect()
+	{
+		Debug.Assert(MultiplayerManager.Client != null);
+		
+		MultiplayerManager.Client.OnPlayerJoined += PlayerJoined;
+		MultiplayerManager.Client.OnPlayerUpdate += PlayerUpdate;
+		MultiplayerManager.Client.OnPlayerLeft += PlayerLeft;
+		
+		foreach (var player in MultiplayerManager.Client.Players) PlayerJoined(player);
+	}
+
+	private void OnDisconnect()
+	{
+		foreach (var (_, ch) in _playerCharacters) ch.Remove();
+		_playerCharacters.Clear();
+	}
+
+	private readonly Dictionary<string, CharacterPanel> _playerCharacters = new();
+	
+	private void PlayerJoined(MultiplayerClient.Player player)
+	{
+		if (player.ID == MultiplayerManager.Client!.PlayerId)
+			return;
+		
+		var ch = Add<CharacterPanel>();
+		ch.PlaysMusic = false;
+		ch.ExpressiveOnClicks = false;
+		ch.DynamicallySized = true;
+		ch.Anchor = ch.Origin = Anchor.BottomLeft;
+		ch.Size = new Vector2F(0.2f, 0.4f);
+		ch.SetCharacter(CharacterMod.GetCharacterData(player.Character));
+		_playerCharacters[player.ID] = ch;
+	}
+
+	private void PlayerUpdate(MultiplayerClient.Player player)
+	{
+		if (!_playerCharacters.TryGetValue(player.ID, out var ch))
+			return;
+
+		if (ch.Character?.GetUniqueID() != player.Character)
+			ch.SetCharacter(CharacterMod.GetCharacterData(player.Character));
+	}
+
+	private void PlayerLeft(MultiplayerClient.Player player)
+	{
+		if (!_playerCharacters.TryGetValue(player.ID, out var ch))
+			return;
+		
+		ch.Remove();
+		_playerCharacters.Remove(player.ID);
+	}
+
+	#endregion
 }
