@@ -19,6 +19,10 @@
 	<PropertyGroup>
 		<SourceRevisionId>build$([System.DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss:fffZ"))</SourceRevisionId>
 	</PropertyGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="flustix.Midori" Version="2026.607.1" />
+    </ItemGroup>
 
 	<PropertyGroup Condition="'$(IsWindows)' == 'true'">
 		<DefineConstants>$(DefineConstants);COMPILED_WINDOWS</DefineConstants>

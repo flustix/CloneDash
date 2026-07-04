@@ -1,4 +1,5 @@
 ﻿using CloneDash.Common;
+using CloneDash.Common.Gamemodes.MuseDash.V1.Data;
 using CloneDash.Common.Songs;
 using CloneDash.Common.UI;
 using CloneDash.Common.UI.Binding;
@@ -7,7 +8,7 @@ using CloneDash.Menu;
 using CloneDash.Menu.Character;
 using CloneDash.Menu.Main;
 using CloneDash.Menu.Searching;
-
+using CloneDash.Multiplayer;
 using Nucleus;
 using Nucleus.Common.Audio;
 using Nucleus.Common.Input;
@@ -17,13 +18,11 @@ using Nucleus.Engine;
 using Nucleus.Extensions;
 using Nucleus.Types;
 using Nucleus.UI;
-
 using Raylib_cs;
 using System.Numerics;
 using Image = Nucleus.UI.Elements.Image;
 
 namespace CloneDash.Game;
-
 
 [Nucleus.MarkForStaticConstruction]
 public class MainMenuLevel : Level, IMainMenuLevel
@@ -35,7 +34,7 @@ public class MainMenuLevel : Level, IMainMenuLevel
 	private Label _headerText = null!;
 
 	public Element Content { get; private set; } = null!;
-	
+
 	private Panel _footer = null!;
 	private MenuFooterButton _backButton = null!;
 	private MenuFooterButton _screenButton = null!;
@@ -54,7 +53,7 @@ public class MainMenuLevel : Level, IMainMenuLevel
 		element.SetRichPresence();
 
 		_backButton.Action = ActiveElements.Count > 1 ? PopActiveElement : null;
-		
+
 		_targetPrimaryColor = element.GetPrimaryColor(RootPanel.GetScheme()).ToVector();
 		_targetBackgroundColor = element.GetBackgroundColor(RootPanel.GetScheme()).ToVector();
 		_headerText.SetText(element.Name);
@@ -91,17 +90,15 @@ public class MainMenuLevel : Level, IMainMenuLevel
 		if (nextPanel != null) {
 			nextPanel.OnShown();
 			nextPanel.SetRichPresence();
-			
+
 			_targetPrimaryColor = nextPanel.GetPrimaryColor(RootPanel.GetScheme()).ToVector();
 			_targetBackgroundColor = nextPanel.GetBackgroundColor(RootPanel.GetScheme()).ToVector();
 			_headerText.SetText(nextPanel.Name);
 		}
 	}
 
-	private void UpdateAction(MenuFooterButton button, MenuFooterAction? action)
-	{
-		if (action is null)
-		{
+	private void UpdateAction(MenuFooterButton button, MenuFooterAction? action) {
+		if (action is null) {
 			button.Action = null;
 			return;
 		}
@@ -121,13 +118,12 @@ public class MainMenuLevel : Level, IMainMenuLevel
 	private void SwitchBindings(IMainMenuPanel? panel) {
 		_boundKeybindings.ForEach(x => Keybinds.RemoveKeybind(x));
 		_bindingFlow.ClearChildren();
-		
+
 		if (panel is null) return;
 
 		PanelBinding[] binds = panel.GetBindings();
-		
-		foreach (PanelBinding binding in binds)
-		{
+
+		foreach (PanelBinding binding in binds) {
 			_boundKeybindings.AddRange(binding.Bindings.Select(x => Keybinds.AddKeybind(x.buttons.ToList(), x.action)));
 			VisualPanelBinding visual = new(_bindingFlow, binding);
 			visual.SetAnchor(Anchor.CenterLeft);
@@ -191,16 +187,13 @@ public class MainMenuLevel : Level, IMainMenuLevel
 		_backButton.SetAnchor(Anchor.BottomLeft);
 		_backButton.SetOrigin(Anchor.BottomLeft);
 		_backButton.SetPos(new Vector2F(40, -12));
-		
+
 		_screenButton = new MenuFooterButton(_footer);
 		_screenButton.SetAnchor(Anchor.BottomRight);
 		_screenButton.SetOrigin(Anchor.BottomRight);
 		_screenButton.SetPos(new Vector2F(-40, -12));
 
-		_bindingFlow = new Flow(_footer) {
-			AutoSize = Axis.Both,
-			Spacing = 20
-		};
+		_bindingFlow = new Flow(_footer) { AutoSize = Axis.Both, Spacing = 20 };
 		_bindingFlow.SetAnchor(Anchor.Center);
 		_bindingFlow.SetOrigin(Anchor.Center);
 
@@ -223,13 +216,13 @@ public class MainMenuLevel : Level, IMainMenuLevel
 
 	public override ConsoleOverlaySettings GetConsoleOverlaySettings() {
 		return base.GetConsoleOverlaySettings() with {
-			TextSize = 11,
-			Position = new(4 + 6, (int)(_header.GetRenderBounds().H + 4))
+			TextSize = 11, Position = new(4 + 6, (int)(_header.GetRenderBounds().H + 4))
 		};
 	}
 
 	private static float offsetBasedOnLifetime(Element e, float inf, float heightDiv) =>
-		(float)(NMath.Remap(1 - NMath.Ease.OutCubic(e.Lifetime * inf), 0, 1, 0, 1, false, true) * (EngineCore.GetWindowHeight() / heightDiv));
+		(float)(NMath.Remap(1 - NMath.Ease.OutCubic(e.Lifetime * inf), 0, 1, 0, 1, false, true) *
+		        (EngineCore.GetWindowHeight() / heightDiv));
 
 	// At some point, this should just become an element type. This whole thing is a wreck otherwise and injects a bunch of callbacks into
 	// random things... I hate it
@@ -250,7 +243,9 @@ public class MainMenuLevel : Level, IMainMenuLevel
 		protected override void OnThink() {
 			base.OnThink();
 
-			SetBgColor(GetBgColor() with { A = (byte)(int)Math.Clamp(NMath.Ease.OutCubic(Lifetime * 1.4f) * 155, 0, 155) });
+			SetBgColor(GetBgColor() with {
+				A = (byte)(int)Math.Clamp(NMath.Ease.OutCubic(Lifetime * 1.4f) * 155, 0, 155)
+			});
 
 			if (!setupTrack)
 				TrySetupTrack();
@@ -295,6 +290,7 @@ public class MainMenuLevel : Level, IMainMenuLevel
 					Graphics2D.OffsetDrawing(-child.GetRenderBounds().Pos);
 				}
 			}
+
 			Graphics2D.OffsetDrawing(-pos);
 
 			selector.DiscRotateAnimation = Lifetime * 90;
@@ -312,6 +308,7 @@ public class MainMenuLevel : Level, IMainMenuLevel
 					if (i % 256 == 0)
 						framesOverTime.Add(val);
 				}
+
 				currentAvgVolume /= frames.Length;
 				currentAvgVolume = Math.Clamp(NMath.Ease.InQuad(MathF.Abs(currentAvgVolume) * 1.5f), 0, 1.5f);
 			});
@@ -321,7 +318,9 @@ public class MainMenuLevel : Level, IMainMenuLevel
 	class LevelSelectorBackButton(LevelSelectorPanel levelSelector, SongSelector selector) : Button(levelSelector)
 	{
 		public override void Paint(float w, float h) {
-			SetPos(new((levelSelector.GetRenderBounds().W / -5) - ((float)NMath.Ease.InCubic(Math.Clamp(1 - (Lifetime - 0.3), 0, 1)) * -64), 0));
+			SetPos(new(
+				(levelSelector.GetRenderBounds().W / -5) -
+				((float)NMath.Ease.InCubic(Math.Clamp(1 - (Lifetime - 0.3), 0, 1)) * -64), 0));
 			base.Paint(w, h);
 		}
 	}
@@ -359,7 +358,8 @@ public class MainMenuLevel : Level, IMainMenuLevel
 		}
 	}
 
-	class LevelSelectorDifficultiesPanel(LevelSelectorPanel levelSelector, SongSelector selector, float height) : FlexPanel(levelSelector)
+	class LevelSelectorDifficultiesPanel(LevelSelectorPanel levelSelector, SongSelector selector, float height)
+		: FlexPanel(levelSelector)
 	{
 		float height = height;
 
@@ -381,7 +381,8 @@ public class MainMenuLevel : Level, IMainMenuLevel
 		}
 	}
 
-	class LevelSelectorSelectDifficultyButton(Element parent, string difficultyName, SongChartMetadata metadata) : Button(parent)
+	class LevelSelectorSelectDifficultyButton(Element parent, string difficultyName, SongChartMetadata metadata)
+		: Button(parent)
 	{
 		public override void PaintBackground(float w, float h) {
 			var life = Lifetime - (offset * .15f);
@@ -399,6 +400,7 @@ public class MainMenuLevel : Level, IMainMenuLevel
 				Graphics2D.DrawRectangleOutline(0, 0, w, h, GetBorderSize());
 			}
 		}
+
 		public override void Paint(float w, float h) {
 			var life = Lifetime - (offset * .15f);
 			var xOffset = (float)NMath.Ease.InQuart(1 - Math.Clamp(life * 2f, 0, 1)) * -256;
@@ -406,9 +408,11 @@ public class MainMenuLevel : Level, IMainMenuLevel
 
 			base.Paint(w, h);
 
-			Vector2F textDrawingPosition = Anchor.CenterRight.GetPositionGivenAlignment(GetRenderBounds().Size, GetTextPadding());
+			Vector2F textDrawingPosition =
+				Anchor.CenterRight.GetPositionGivenAlignment(GetRenderBounds().Size, GetTextPadding());
 			Graphics2D.SetDrawColor(GetTextColor());
-			Graphics2D.DrawText(textDrawingPosition + new Vector2F(0, -h * 0.25f), $"{metadata.Difficulty}", GetFont(), GetTextSize(), Anchor.CenterRight);
+			Graphics2D.DrawText(textDrawingPosition + new Vector2F(0, -h * 0.25f), $"{metadata.Difficulty}", GetFont(),
+				GetTextSize(), Anchor.CenterRight);
 		}
 
 		bool autoplayChart;
@@ -453,6 +457,7 @@ public class MainMenuLevel : Level, IMainMenuLevel
 			if (selector != null) {
 				selector.ExitSheetSelection();
 			}
+
 			SelectedSong = null;
 		};
 
@@ -474,7 +479,7 @@ public class MainMenuLevel : Level, IMainMenuLevel
 		back.Thinking += (_) => {
 			backImage.SetImageColor(Element.MixColorBasedOnMouseState(back, new(200, 200, 200,
 				(int)(Math.Clamp(NMath.Ease.OutCubic(back.Lifetime - 0.35f), 0, 1) * 255)
-				), new(0, 1, 1.3f, 1), new(0, 1, .7f, 1)));
+			), new(0, 1, 1.3f, 1), new(0, 1, .7f, 1)));
 		};
 
 		LevelSelectorTitleLabel title = new LevelSelectorTitleLabel(levelSelector, selector);
@@ -527,9 +532,24 @@ public class MainMenuLevel : Level, IMainMenuLevel
 
 
 	public void LoadChartSheetLevel(ISongChart chart, bool autoplay) {
-		LevelTransitions.LoadSongChart($"Loading '{chart.GetSong().FetchMetadata(HumanLanguage.GetCurrentLanguage()).Name}'...", chart, new() {
-			Autoplay = autoplay
-		});
+		if (MultiplayerManager.Client != null) {
+			// if (MultiplayerManager.Client.IsHost) {
+				if (chart is not MD1_SongChart md) {
+					Logs.Warn("Only Muse Dash songs are supported right now.");
+					return;
+				}
+
+				MultiplayerManager.Client.StartMap(new string(md.Song.GetUUID()), (int)md.Difficulty);
+			// }
+			// else
+				// Logs.Warn("Only the lobby host can start maps.");
+
+			return;
+		}
+
+		LevelTransitions.LoadSongChart(
+			$"Loading '{chart.GetSong().FetchMetadata(HumanLanguage.GetCurrentLanguage()).Name}'...", chart,
+			new() { Autoplay = autoplay });
 	}
 
 	public override void Think(FrameState frameState) {
@@ -561,10 +581,12 @@ public class MainMenuLevel : Level, IMainMenuLevel
 			x = (float)double.Lerp(target, Character.GetPos().X, Math.Exp(-10f * CurtimeDelta));
 
 		Character.SetPos(new(x, 0));
-		Character.CharacterOffset = new((1 - (float)NMath.Ease.OutCirc(Math.Clamp(Curtime * 1.5, 0, 1))) * -(FrameState.WindowWidth / 2), 0);
+		Character.CharacterOffset =
+			new((1 - (float)NMath.Ease.OutCirc(Math.Clamp(Curtime * 1.5, 0, 1))) * -(FrameState.WindowWidth / 2), 0);
 	}
 
-	private static LevelSelectorSelectDifficultyButton? CreateDifficulty(FlexPanel levelSelector, Action<bool> onClick, SongChartMetadata metadata) {
+	private static LevelSelectorSelectDifficultyButton? CreateDifficulty(FlexPanel levelSelector, Action<bool> onClick,
+		SongChartMetadata metadata) {
 		var difficultyName = metadata.DifficultyName;
 		var buttonColor = metadata.Color;
 		var designer = metadata.ChartAuthors;
@@ -599,7 +621,7 @@ public class MainMenuLevel : Level, IMainMenuLevel
 		play.SetBorderSize(2);
 		play.SetPaintBackgroundEnabled(true);
 
-		play.OnButtonClick += delegate (Button self, ButtonCode button) {
+		play.OnButtonClick += delegate(Button self, ButtonCode button) {
 			play.RunFunction(onClick);
 		};
 
@@ -613,7 +635,7 @@ public class MainMenuLevel : Level, IMainMenuLevel
 	public Panel? GetSelectedSongPanel() => SelectedSong;
 
 	#region Colors
-	
+
 	private static Vector4 _primaryColor;
 	private static Vector4 _backgroundColor;
 
@@ -624,9 +646,9 @@ public class MainMenuLevel : Level, IMainMenuLevel
 	public static Color BackgroundColor => _backgroundColor.ToColor();
 
 	#endregion
-	
+
 	#region Background Rendering
-	
+
 	private static List<BackgroundShape> shapes = new();
 	private const int MaxShapes = 32;
 
@@ -656,9 +678,9 @@ public class MainMenuLevel : Level, IMainMenuLevel
 		_screenButton.SetFgColor(primary);
 		_header.SetBgColor(primary);
 		_footer.SetBgColor(primary);
-		
+
 		UpdateBindingColors(bg, primary);
-		
+
 		var shapesColor = primary;
 		shapesColor.A = 80;
 		Graphics2D.SetDrawColor(shapesColor);
@@ -677,7 +699,8 @@ public class MainMenuLevel : Level, IMainMenuLevel
 
 			switch (shape.Type) {
 				case ShapeType.Square:
-					Graphics2D.DrawRectangle(RectangleF.XYWH(pos.X, pos.Y, size.X, size.Y), Vector2F.Zero / 2f, shape.Rotation);
+					Graphics2D.DrawRectangle(RectangleF.XYWH(pos.X, pos.Y, size.X, size.Y), Vector2F.Zero / 2f,
+						shape.Rotation);
 					break;
 				case ShapeType.Circle:
 					Graphics2D.DrawCircle(pos, size);
@@ -719,7 +742,7 @@ public class MainMenuLevel : Level, IMainMenuLevel
 			TransitionNumber(current.W, target.W)
 		);
 	}
-	
+
 	private float TransitionNumber(float current, float target) {
 		if (Math.Abs(target - current) < .01)
 			return target;
@@ -735,7 +758,7 @@ public class MainMenuLevel : Level, IMainMenuLevel
 		Vector2F pos = shuffle
 			? new Vector2F(Random.Shared.NextSingle() * width, Random.Shared.NextSingle() * height)
 			: new Vector2F(bottom ? value * width : -300, bottom ? height + size * 200 : value * height);
-		
+
 		return new BackgroundShape {
 			Position = pos,
 			Size = size,
