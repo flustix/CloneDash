@@ -1,8 +1,8 @@
 ﻿using AssetStudio;
 
-namespace CloneDash.Compatibility.UnbeatableWhiteLabel;
+namespace CloneDash.Unbeatable;
 
-public static partial class UnbeatableWhiteLabelCompatibility
+public static partial class UnbeatableCompatibility
 {
 	public static GameObject? FindRootGameObject(string fileName, string name) {
 		foreach (var file in Assets.AssetsFileList) {

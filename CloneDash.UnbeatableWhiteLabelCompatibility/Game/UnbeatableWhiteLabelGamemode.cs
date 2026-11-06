@@ -11,7 +11,7 @@ public class UnbeatableWhiteLabelGamemodeProvider : ModProvider<IGamemodeDescrip
 {
 	readonly UnbeatableWhiteLabelGamemode[] descriptors;
 
-	public UnbeatableWhiteLabelGamemodeProvider() : base("UNBEATABLE [white label]", "unbeatable_whitelabel") {
+	public UnbeatableWhiteLabelGamemodeProvider() : base("UNBEATABLE", "unbeatable") {
 		descriptors = [
 			new UnbeatableWhiteLabelGamemode(this),
 		];
@@ -32,9 +32,9 @@ public class UnbeatableWhiteLabelGamemodeProvider : ModProvider<IGamemodeDescrip
 
 public class UnbeatableWhiteLabelGamemode(ICloneDashModProvider provider) : RhythmGamemode(provider)
 {
-	public const string UUID = "gamemode/unbeatable_whitelabel/standard";
+	public const string UUID = "gamemode/unbeatable/standard";
 
-	public override string GetName() => "UNBEATABLE [white label]";
+	public override string GetName() => "UNBEATABLE";
 	public override string GetID() => "standard";
 
 	protected override void Compose(RhythmGameLevel level, ServiceCollection parts, ISongChart chart) {

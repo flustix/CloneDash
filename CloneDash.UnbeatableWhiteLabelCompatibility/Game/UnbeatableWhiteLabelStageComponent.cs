@@ -67,7 +67,7 @@ public class UnbeatableWhiteLabelStageComponent(UnbeatableWhiteLabelCameraRig ca
 		Treble = ImportStageObject("Treble");
 
 		foreach (var name in NotePrefabs)
-			if (ImportGameObject(UnbeatableWhiteLabelCompatibility.FindRootGameObject(NOTE_ASSETS, name), null) is SceneObject template)
+			if (ImportGameObject(Unbeatable.UnbeatableCompatibility.FindRootGameObject(NOTE_ASSETS, name), null) is SceneObject template)
 				prefabs[name] = template;
 
 		BuildMeshes([.. BackgroundRoots.Select(ImportStageObject)]);
@@ -135,7 +135,7 @@ public class UnbeatableWhiteLabelStageComponent(UnbeatableWhiteLabelCameraRig ca
 	}
 
 	SceneObject? ImportStageObject(string name) {
-		var obj = ImportGameObject(UnbeatableWhiteLabelCompatibility.FindRootGameObject(STAGE_SCENE, name), null);
+		var obj = ImportGameObject(Unbeatable.UnbeatableCompatibility.FindRootGameObject(STAGE_SCENE, name), null);
 		if (obj != null)
 			Activate(obj);
 		return obj;

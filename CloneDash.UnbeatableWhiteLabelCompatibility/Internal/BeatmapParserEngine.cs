@@ -13,8 +13,8 @@ public class BeatmapParserEngine
 {
 	public void ReadBeatmap(string contents, ref Beatmap beatmap) {
 		string[] array = Regex.Split(contents, Environment.NewLine);
-		if (array[0] != "osu file format v14")
-			throw new NotSupportedException();
+		// if (array[0] != "osu file format v14")
+			// throw new NotSupportedException();
 		string text = "";
 		int num = 1;
 		string[] array2 = array;

@@ -70,7 +70,7 @@ public class UnbeatableWhiteLabelCharacterMainMenuInstance(UnbeatableWhiteLabelC
 	}
 
 	static AudioPlaybackHandle Play(string name, bool loop) {
-		var clip = UnbeatableWhiteLabelCompatibility.GetMasterClip(name);
+		var clip = Unbeatable.UnbeatableCompatibility.GetMasterClip(name);
 		if (!IValidatable.IsValid(clip))
 			return default;
 

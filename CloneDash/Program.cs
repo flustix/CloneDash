@@ -9,13 +9,13 @@ using CloneDash.Common.Gamemodes.MuseDash.V1.Data;
 using CloneDash.Common.Systems.Discord;
 using CloneDash.Common.UI.Searching;
 using CloneDash.Compatibility.MuseDash;
-using CloneDash.Compatibility.UnbeatableWhiteLabel;
 using CloneDash.CustomAlbumsCompatibility.CustomAlbums;
 using CloneDash.MuseDashCustomPlayCompatibility;
 using CloneDash.Game;
 using CloneDash.Settings;
 using CloneDash.Systems;
-
+using CloneDash.Unbeatable;
+using CloneDash.Unbeatable.Indexes.Beatmaps;
 using Nucleus;
 using Nucleus.Commands;
 using Nucleus.Common.Commands;
@@ -156,9 +156,9 @@ public class GameDLL : IGameDLL
 		}
 
 		// Initialize UNBEATABLE compat
-		if (UnbeatableWhiteLabelCompatibility.IsEnabled()) {
-			Interlude.Spin(submessage: "Initializing the UNBEATABLE [white label] compatibility layer...");
-			UnbeatableWhiteLabelCompatibility.InitializeCompatibilityLayer();
+		if (UnbeatableCompatibility.IsEnabled()) {
+			Interlude.Spin(submessage: "Initializing the UNBEATABLE compatibility layer...");
+			UnbeatableCompatibility.InitializeCompatibilityLayer();
 		}
 
 		// Load muse dash fonts
@@ -321,13 +321,13 @@ public class GameDLL : IGameDLL
 				LevelTransitions.LoadMainMenu();
 		}
 
-		else if (cmd.HasParm("-ubwl_level")) {
-			string ubwl_level = cmd.ParmValue("-ubwl_level", "");
+		else if (cmd.HasParm("-ub_level")) {
+			string ubwl_level = cmd.ParmValue("-ub_level", "");
 			int difficulty = cmd.ParmValue("-difficulty", 0);
-			BeatmapIndexSong? song = UnbeatableWhiteLabelCompatibility.BeatmapIndex?.Songs.FirstOrDefault(x => x.Name.Equals(ubwl_level, StringComparison.InvariantCultureIgnoreCase));
+			BeatmapIndexSong? song = UnbeatableCompatibility.BeatmapIndex?.Songs.FirstOrDefault(x => x.Name.Equals(ubwl_level, StringComparison.InvariantCultureIgnoreCase));
 
-			if (song != null && difficulty >= 0 && difficulty < song.Beatmaps.Length)
-				LevelTransitions.LoadSongChart(first ? "" : "Interprocess load started!", song.Beatmaps[difficulty], new RhythmGameLoadParameters()
+			if (song != null && difficulty >= 0 && difficulty < song.Charts.Length)
+				LevelTransitions.LoadSongChart(first ? "" : "Interprocess load started!", song.Charts[difficulty].GetChart(song), new RhythmGameLoadParameters()
 					.Set(RhythmGameLoadParameters.AUTOPLAY, cmd.FindParm("-autoplay") != 0)
 				);
 			else

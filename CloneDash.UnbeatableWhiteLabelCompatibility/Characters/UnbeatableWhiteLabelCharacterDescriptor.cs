@@ -8,22 +8,22 @@ using Nucleus.Common.Graphics;
 
 namespace CloneDash.Compatibility.UnbeatableWhiteLabel;
 
-public class UnbeatableWhiteLabelCharacterProvider() : ModProvider<ICharacterDescriptor>("UNBEATABLE [white label]", "unbeatable_whitelabel"), ICharacterProvider
+public class UnbeatableWhiteLabelCharacterProvider() : ModProvider<ICharacterDescriptor>("UNBEATABLE", "unbeatable"), ICharacterProvider
 {
 	public const string BEAT = "beat";
 
 	public override IEnumerable<string> GetAvailableIDs() {
-		if (UnbeatableWhiteLabelCompatibility.IsEnabled())
+		if (Unbeatable.UnbeatableCompatibility.IsEnabled())
 			yield return BEAT;
 	}
 
 	public override ICharacterDescriptor? FindByID(ReadOnlySpan<char> id) {
-		if (!UnbeatableWhiteLabelCompatibility.IsEnabled() || !id.Equals(BEAT, StringComparison.Ordinal))
+		if (!Unbeatable.UnbeatableCompatibility.IsEnabled() || !id.Equals(BEAT, StringComparison.Ordinal))
 			return null;
 		return new UnbeatableWhiteLabelCharacterDescriptor(this);
 	}
 
-	public override bool IsEnabled() => UnbeatableWhiteLabelCompatibility.IsEnabled();
+	public override bool IsEnabled() => Unbeatable.UnbeatableCompatibility.IsEnabled();
 }
 
 public class UnbeatableWhiteLabelCharacterDescriptor(ICloneDashModProvider provider) : ModDescriptor, ICharacterDescriptor
@@ -41,8 +41,8 @@ public class UnbeatableWhiteLabelCharacterDescriptor(ICloneDashModProvider provi
 	public ReadOnlySpan<char> GetPerk() => "";
 
 	public ITexture? GetThumbnailTexture() {
-		var texture = UnbeatableWhiteLabelCompatibility.GetObjectByName<AssetStudio.Texture2D>(THUMBNAIL)
-			?? UnbeatableWhiteLabelCompatibility.GetObjectByName<AssetStudio.Sprite>(THUMBNAIL)?.m_RD.GetTexture();
+		var texture = Unbeatable.UnbeatableCompatibility.GetObjectByName<AssetStudio.Texture2D>(THUMBNAIL)
+			?? Unbeatable.UnbeatableCompatibility.GetObjectByName<AssetStudio.Sprite>(THUMBNAIL)?.m_RD.GetTexture();
 		return texture == null ? null : UnityAssetUtils.ConvertTexture(EngineCore.Level, texture);
 	}
 

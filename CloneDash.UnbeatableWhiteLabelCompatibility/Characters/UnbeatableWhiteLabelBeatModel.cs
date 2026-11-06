@@ -68,7 +68,7 @@ public sealed class UnbeatableWhiteLabelBeatModel : UnitySimScene
 	}
 
 	SceneObject? Import(string name) {
-		var obj = ImportGameObject(UnbeatableWhiteLabelCompatibility.FindRootGameObject(STAGE_SCENE, name), null);
+		var obj = ImportGameObject(Unbeatable.UnbeatableCompatibility.FindRootGameObject(STAGE_SCENE, name), null);
 		if (obj != null)
 			Activate(obj);
 		return obj;
