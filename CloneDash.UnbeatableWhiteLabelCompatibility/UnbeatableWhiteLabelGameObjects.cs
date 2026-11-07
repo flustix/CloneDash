@@ -5,6 +5,9 @@ namespace CloneDash.Unbeatable;
 public static partial class UnbeatableCompatibility
 {
 	public static GameObject? FindRootGameObject(string fileName, string name) {
+		if (Assets is null)
+			return null;
+		
 		foreach (var file in Assets.AssetsFileList) {
 			if (file.fileName != fileName)
 				continue;

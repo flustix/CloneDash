@@ -4,6 +4,7 @@ using CloneDash.Common.Data;
 using CloneDash.Common.Gamemodes;
 using CloneDash.Common.Songs;
 using CloneDash.Compatibility.UnbeatableWhiteLabel;
+using CloneDash.Compatibility.Unity;
 using CloneDash.Unbeatable.Indexes.Beatmaps;
 using CloneDash.Unbeatable.Internal;
 using Nucleus.Common.Audio;
@@ -17,23 +18,24 @@ public class UnbeatableChart(BeatmapIndexSong song, BeatmapIndexChart chart) : I
 	public Beatmap Beatmap => _beatmap.Value;
 
 	private readonly Lazy<Beatmap> _beatmap = new(() => {
-		var beatmap = new Beatmap();
+		Beatmap beatmap = new();
+		AssetStudio.Object? obj = song.ResourcesFile.GetObjectByPath(chart.Path);
 
-		UnbeatableCompatibility.AssetLookupEntry? entry;
-
-		if (!UnbeatableCompatibility.AssetPointerTable.TryGetValue(chart.Path, out entry))
+		if (obj is not TextAsset text)
 			return beatmap;
 
-		if (entry.Object is TextAsset text) {
-			BeatmapParserEngine parser = new();
-			parser.ReadBeatmap(Encoding.UTF8.GetString(text.m_Script), ref beatmap);
-		}
-
+		BeatmapParserEngine parser = new();
+		parser.ReadBeatmap(Encoding.UTF8.GetString(text.m_Script), ref beatmap);
 		return beatmap;
 	});
 
 	public ISong GetSong() => song.Song;
-	public IAudioClip GetAudioTrack() => null!;
+
+	public IAudioClip GetAudioTrack() {
+		string name = Path.GetFileNameWithoutExtension(Beatmap.general.audioFilename);
+		IAudioClip? clip = UnbeatableCompatibility.MasterClips.GetValueOrDefault(name);
+		return clip!;
+	}
 
 	public ChartTiming GetTiming() {
 		List<TempoChange> tempoChanges = [];

@@ -12,6 +12,7 @@ using Nucleus.Commands;
 using Nucleus.Common.Audio;
 using Nucleus.Core;
 using Nucleus.Util;
+using OdinSerializer.Utilities;
 using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
@@ -38,13 +39,12 @@ public static partial class UnbeatableCompatibility
 	internal static AssemblyLoader? Assemblies;
 	private static string? _installDirectory;
 
-	internal static readonly Dictionary<UnityPathPointer, AssetLookupEntry> AssetPointerTable = [];
-	internal static readonly Dictionary<long, AssetLookupEntry> PathIDLUT = [];
+	internal static readonly Dictionary<string, SerializedFile> FileTable = [];
 	internal static readonly Dictionary<ulong, AssetLookupEntry> NameLUT = [];
 
-	static readonly Dictionary<string, IAudioClip> BgmClips = [];
-	static readonly Dictionary<string, IAudioClip> MasterClips = [];
-	static readonly Dictionary<string, IAudioClip> SfxClips = [];
+	internal static readonly Dictionary<string, IAudioClip> BgmClips = [];
+	internal static readonly Dictionary<string, IAudioClip> MasterClips = [];
+	internal static readonly Dictionary<string, IAudioClip> SfxClips = [];
 
 	public static AppStatus LightInitialize() {
 		string path = new(CustomGamePath.GetString());
@@ -87,38 +87,34 @@ public static partial class UnbeatableCompatibility
 			return result; // unbeatable is optional <- it's actually not
 		}
 
-		if (Assets is null)
+		if (Assets is null || string.IsNullOrWhiteSpace(_installDirectory))
 			return AppStatus.AppNotInstalled;
 
 		// Build the LUT
 		foreach (var serializedFile in Assets.AssetsFileList) {
+			FileTable[serializedFile.fileName] = serializedFile;
+
 			foreach (var obj in serializedFile.Objects) {
 				AssetLookupEntry entry = new() { SerializedFile = serializedFile, Object = obj };
-				PathIDLUT[obj.m_PathID] = entry;
 				NameLUT[obj.GetUnityName().Hash(false)] = entry;
-
-				// TODO: this is completely wrong and only here to get charts to load
-				int id = serializedFile.fileName == "resources.assets" ? 0 : 1;
-				
-				UnityPathPointer pointer = new() { FileID = id, PathID = obj.m_PathID };
-				AssetPointerTable[pointer] = entry;
 			}
 		}
 
-		/*var bgm = LoadFsbMagically(System.IO.File.ReadAllBytes(System.IO.Path.Combine(InstallDir, "UNBEATABLE_Data",
+		FmodSoundBank[] bgm = LoadFsbMagically(File.ReadAllBytes(Path.Combine(_installDirectory, "UNBEATABLE_Data",
 			"StreamingAssets", "BGM.bank")));
-		var master = LoadFsbMagically(System.IO.File.ReadAllBytes(System.IO.Path.Combine(InstallDir, "UNBEATABLE_Data",
+		FmodSoundBank[] master = LoadFsbMagically(File.ReadAllBytes(Path.Combine(_installDirectory, "UNBEATABLE_Data",
 			"StreamingAssets", "Master.bank")));
-		var sfx = LoadFsbMagically(System.IO.File.ReadAllBytes(System.IO.Path.Combine(InstallDir, "UNBEATABLE_Data",
+		FmodSoundBank[] sfx = LoadFsbMagically(File.ReadAllBytes(Path.Combine(_installDirectory, "UNBEATABLE_Data",
 			"StreamingAssets", "SFX.bank")));
-		BuildNucleusClips(Bgm, BgmClips);
-		BuildNucleusClips(Master, MasterClips);
-		BuildNucleusClips(Sfx, SfxClips);*/
+		BuildNucleusClips(bgm, BgmClips);
+		BuildNucleusClips(master, MasterClips);
+		BuildNucleusClips(sfx, SfxClips);
 
 		MonoBehaviour indexBehaviour = GetObjectByName<MonoBehaviour>("BeatmapIndex")!;
 		OrderedDictionary indexDictionary = indexBehaviour.ToType(indexBehaviour.ConvertToTypeTree(Assemblies));
 		string indexJson = JsonSerializer.Serialize(indexDictionary);
 		BeatmapIndex = JsonSerializer.Deserialize<BeatmapIndex>(indexJson)!;
+		BeatmapIndex.Songs.ForEach(x => x.ResourcesFile = indexBehaviour.assetsFile);
 
 		/*object[] songs = (object[])data["songs"]!;
 		BeatmapIndex.Songs = new BeatmapIndexSong[songs.Length];
@@ -218,12 +214,6 @@ public static partial class UnbeatableCompatibility
 	}
 
 	public static IAudioClip? GetMasterClip(string name) => MasterClips.TryGetValue(name, out var clip) ? clip : null;
-
-	public static T? GetObjectByPathID<T>(long pathID) where T : AssetStudio.Object {
-		if (!PathIDLUT.TryGetValue(pathID, out AssetLookupEntry? entry))
-			return null;
-		return entry.Object is T t ? t : null;
-	}
 
 	public static bool IsEnabled() => UnbeatableEnabled.GetBool();
 }

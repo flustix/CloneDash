@@ -1,3 +1,4 @@
+using AssetStudio;
 using CloneDash.Common.Songs;
 using CloneDash.Compatibility.Unity;
 using CloneDash.Unbeatable.Songs;
